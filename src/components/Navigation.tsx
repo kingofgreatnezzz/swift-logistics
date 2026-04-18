@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Package, User, Settings, BarChart3 } from 'lucide-react';
+import { Menu, X, Package, User, Settings, BarChart3, LogOut, LogIn, UserPlus } from 'lucide-react';
 import { themeConfig } from '@/lib/theme';
+import { useAuthSimple } from '@/lib/auth-simple';
 import Link from 'next/link';
 
 const navigation = [
@@ -23,6 +24,7 @@ const adminNavigation = [
 ];
 
 export default function Navigation() {
+  const { user, logout, isAdmin } = useAuthSimple();
   const [isOpen, setIsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
@@ -48,7 +50,7 @@ export default function Navigation() {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden items-center gap-8 lg:flex">
+          <div className="hidden items-center gap-6 lg:flex">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -59,46 +61,85 @@ export default function Navigation() {
               </Link>
             ))}
             
-            {/* Admin Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsAdminOpen(!isAdminOpen)}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600/10 to-purple-600/10 px-4 py-2 text-sm font-medium text-blue-700 transition-all hover:from-blue-600/20 hover:to-purple-600/20 dark:text-blue-300"
-              >
-                <Settings className="h-4 w-4" />
-                Admin
-              </button>
-              
-              <AnimatePresence>
-                {isAdminOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white p-2 shadow-2xl shadow-gray-200/50 dark:border-gray-800 dark:bg-gray-900 dark:shadow-gray-900/50"
-                  >
-                    {adminNavigation.map((item) => (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </Link>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* Admin Dropdown - Only for admin users */}
+            {isAdmin && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsAdminOpen(!isAdminOpen)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600/10 to-purple-600/10 px-4 py-2 text-sm font-medium text-blue-700 transition-all hover:from-blue-600/20 hover:to-purple-600/20 dark:text-blue-300"
+                >
+                  <Settings className="h-4 w-4" />
+                  Admin
+                </button>
+                
+                <AnimatePresence>
+                  {isAdminOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white p-2 shadow-2xl shadow-gray-200/50 dark:border-gray-800 dark:bg-gray-900 dark:shadow-gray-900/50"
+                    >
+                      {adminNavigation.map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {item.name}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/40"
-            >
-              Get Started
-            </motion.button>
+            {/* Auth Buttons */}
+            {user ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600/10 to-purple-600/10 px-4 py-2">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {user.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {user.username}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {user.role === 'admin' ? 'Administrator' : 'User'}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={logout}
+                  className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link href="/signin">
+                  <button className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
+                    <LogIn className="h-4 w-4" />
+                    Sign In
+                  </button>
+                </Link>
+                <Link href="/signup">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/40"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    Sign Up
+                  </motion.button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -135,30 +176,73 @@ export default function Navigation() {
                   </Link>
                 ))}
                 
-                <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
-                  <div className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                    Admin
+                {/* Admin Section - Only for admin users */}
+                {isAdmin && (
+                  <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
+                    <div className="px-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Admin
+                    </div>
+                    {adminNavigation.map((item) => (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className="flex items-center gap-3 rounded-lg px-4 py-3 text-base text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.name}
+                      </Link>
+                    ))}
                   </div>
-                  {adminNavigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="flex items-center gap-3 rounded-lg px-4 py-3 text-base text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.name}
-                    </Link>
-                  ))}
-                </div>
+                )}
                 
-                <div className="px-4 pt-4">
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-blue-500/25"
-                  >
-                    Get Started
-                  </motion.button>
+                {/* Auth Section */}
+                <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
+                  {user ? (
+                    <div className="space-y-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold">
+                          {user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {user.username}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {user.role === 'admin' ? 'Administrator' : 'User'}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsOpen(false);
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 px-4">
+                      <Link href="/signin" onClick={() => setIsOpen(false)}>
+                        <button className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800">
+                          <LogIn className="h-5 w-5" />
+                          Sign In
+                        </button>
+                      </Link>
+                      <Link href="/signup" onClick={() => setIsOpen(false)}>
+                        <motion.button
+                          whileTap={{ scale: 0.95 }}
+                          className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-blue-500/25"
+                        >
+                          <UserPlus className="h-5 w-5 mr-2 inline" />
+                          Sign Up
+                        </motion.button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
