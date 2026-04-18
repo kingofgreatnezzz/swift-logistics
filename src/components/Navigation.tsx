@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Package, User, Settings, BarChart3, LogOut, LogIn, UserPlus } from 'lucide-react';
+import { Menu, X, Package, User, Settings, BarChart3, LogOut, LogIn, UserPlus, Shield } from 'lucide-react';
 import { themeConfig } from '@/lib/theme';
-import { useAuthSimple } from '@/lib/auth-simple';
+import { useAuth } from '@/lib/auth';
 import Link from 'next/link';
 
 const navigation = [
@@ -24,9 +24,14 @@ const adminNavigation = [
 ];
 
 export default function Navigation() {
-  const { user, logout, isAdmin } = useAuthSimple();
+  const { user, logout, isAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [currentPath, setCurrentPath] = useState('');
+  
+  useEffect(() => {
+    setCurrentPath(window.location.pathname);
+  }, []);
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-gray-200/50 bg-white/80 backdrop-blur-xl dark:border-gray-800/50 dark:bg-gray-900/80">
@@ -61,39 +66,14 @@ export default function Navigation() {
               </Link>
             ))}
             
-            {/* Admin Dropdown - Only for admin users */}
-            {isAdmin && (
-              <div className="relative">
-                <button
-                  onClick={() => setIsAdminOpen(!isAdminOpen)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600/10 to-purple-600/10 px-4 py-2 text-sm font-medium text-blue-700 transition-all hover:from-blue-600/20 hover:to-purple-600/20 dark:text-blue-300"
-                >
-                  <Settings className="h-4 w-4" />
-                  Admin
+            {/* Admin Access Button - Only show on non-admin pages */}
+            {isAdmin && !currentPath.startsWith('/only-admin') && (
+              <Link href="/only-admin">
+                <button className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-600/10 to-pink-600/10 px-4 py-2 text-sm font-medium text-red-700 transition-all hover:from-red-600/20 hover:to-pink-600/20 dark:text-red-300">
+                  <Shield className="h-4 w-4" />
+                  Admin Portal
                 </button>
-                
-                <AnimatePresence>
-                  {isAdminOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white p-2 shadow-2xl shadow-gray-200/50 dark:border-gray-800 dark:bg-gray-900 dark:shadow-gray-900/50"
-                    >
-                      {adminNavigation.map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-                        >
-                          <item.icon className="h-4 w-4" />
-                          {item.name}
-                        </Link>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              </Link>
             )}
 
             {/* Auth Buttons */}

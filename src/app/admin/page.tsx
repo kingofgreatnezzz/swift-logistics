@@ -2,23 +2,27 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple } from '@/lib/auth-simple';
+import { useAuth } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import { BarChart3, Package, Users, Settings, DollarSign, TrendingUp, Shield, Clock } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { user, isAdmin } = useAuthSimple();
+  const { user, isAdmin, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
-      router.push('/signin');
-    } else if (!isAdmin) {
-      router.push('/');
+    // Only redirect after loading is complete
+    if (!isLoading) {
+      if (!user) {
+        router.push('/signin');
+      } else if (!isAdmin) {
+        router.push('/');
+      }
     }
-  }, [user, isAdmin, router]);
+  }, [user, isAdmin, router, isLoading]);
 
-  if (!user || !isAdmin) {
+  // Show loading state
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -27,6 +31,11 @@ export default function AdminDashboard() {
         </div>
       </div>
     );
+  }
+
+  // Check access after loading
+  if (!user || !isAdmin) {
+    return null; // Will redirect in useEffect
   }
 
   const stats = [

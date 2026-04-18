@@ -2,12 +2,12 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthSimple } from '@/lib/auth-simple';
+import { useAuth } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import { Package, Search, Filter, Edit, Trash2, Eye, Download, Plus } from 'lucide-react';
 
 export default function AdminPackages() {
-  const { user, isAdmin } = useAuthSimple();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {

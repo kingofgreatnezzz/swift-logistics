@@ -11,16 +11,17 @@ interface TrackingMapProps {
 
 export default function TrackingMap({ package: pkg }: TrackingMapProps) {
   const [progress, setProgress] = useState(0);
-  const [isSimulating, setIsSimulating] = useState(true);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   // Simulate package movement
   useEffect(() => {
-    if (!isSimulating) return;
+    if (!isPlaying) return;
 
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
-          clearInterval(interval);
+          setIsPlaying(false);
           return 100;
         }
         return prev + 1;
@@ -28,7 +29,7 @@ export default function TrackingMap({ package: pkg }: TrackingMapProps) {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isSimulating]);
+  }, [isPlaying]);
 
   const getCurrentLocation = () => {
     if (progress < 33) return 'Origin';
@@ -182,7 +183,7 @@ export default function TrackingMap({ package: pkg }: TrackingMapProps) {
           <div className="text-center">
             <div className="text-sm text-gray-500 dark:text-gray-400">Speed</div>
             <div className="text-lg font-bold text-gray-900 dark:text-white">
-              {isSimulating ? '850 km/h' : '0 km/h'}
+              {isPlaying ? '850 km/h' : '0 km/h'}
             </div>
           </div>
           
@@ -208,6 +209,61 @@ export default function TrackingMap({ package: pkg }: TrackingMapProps) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Map Controls */}
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button
+          onClick={() => {
+            setIsPlaying(!isPlaying);
+            if (!isPlaying && progress >= 100) setProgress(0);
+          }}
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${isPlaying ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300'}`}
+        >
+          {isPlaying ? (
+            <>
+              <span className="h-2 w-2 bg-red-600 rounded-full"></span>
+              Pause Tracking
+            </>
+          ) : (
+            <>
+              <span className="h-2 w-2 bg-green-600 rounded-full animate-pulse"></span>
+              Start Tracking
+            </>
+          )}
+        </button>
+        
+        <button
+          onClick={() => setProgress(0)}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition"
+        >
+          Reset
+        </button>
+        
+        <button
+          onClick={() => setProgress(prev => Math.min(prev + 10, 100))}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-800/50 transition"
+        >
+          +10%
+        </button>
+        
+        <button
+          onClick={() => setProgress(prev => Math.max(prev - 10, 0))}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-800/50 transition"
+        >
+          -10%
+        </button>
+        
+        <div className="flex-1">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={progress}
+            onChange={(e) => setProgress(parseInt(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          />
         </div>
       </div>
     </motion.div>

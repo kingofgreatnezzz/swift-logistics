@@ -5,9 +5,11 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, LogIn, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 
 export default function SignInPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -44,31 +46,30 @@ export default function SignInPage() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Attempting login with:', formData.email);
+      const result = await login(formData.email, formData.password);
+      console.log('Login result:', result);
       
-      // For demo purposes, check for admin credentials
-      if (formData.email === 'tebia@gmail.com' && formData.password === 'Password@1') {
-        localStorage.setItem('user', JSON.stringify({
-          username: 'tebia',
-          email: 'tebia@gmail.com',
-          role: 'admin',
-          isAuthenticated: true
-        }));
-      } else {
-        // For regular users, create a demo user
-        localStorage.setItem('user', JSON.stringify({
-          username: 'demo_user',
-          email: formData.email,
-          role: 'user',
-          isAuthenticated: true
-        }));
+      if (!result.success) {
+        setErrors({ submit: result.error || 'Invalid email or password' });
+        return;
       }
       
-      // Redirect to home page
-      router.push('/');
-      router.refresh();
+      // Wait a moment for state to update
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Redirect based on role
+      console.log('Checking user role for redirect:', result.user?.role);
+      if (result.user?.role === 'admin') {
+        console.log('Redirecting admin to /only-admin');
+        // Use hard redirect to ensure it works
+        window.location.href = '/only-admin';
+      } else {
+        console.log('Redirecting user to / (role is:', result.user?.role, ')');
+        window.location.href = '/';
+      }
     } catch (error) {
+      console.error('Login error:', error);
       setErrors({ submit: 'Invalid email or password. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -88,19 +89,45 @@ export default function SignInPage() {
     }
   };
 
-  const handleDemoLogin = (role: 'admin' | 'user') => {
-    if (role === 'admin') {
-      setFormData({
-        email: 'tebia@gmail.com',
-        password: 'Password@1',
-        rememberMe: false
-      });
-    } else {
-      setFormData({
-        email: 'user@example.com',
-        password: 'Password@123',
-        rememberMe: false
-      });
+  const handleDemoLogin = async (role: 'admin' | 'user') => {
+    const credentials = role === 'admin' 
+      ? { email: 'tebia@gmail.com', password: 'Password@1' }
+      : { email: 'user@example.com', password: 'Password@123' };
+    
+    setFormData({
+      ...credentials,
+      rememberMe: false
+    });
+    
+    // Auto-submit after setting credentials
+    setIsSubmitting(true);
+    try {
+      console.log('Demo login attempt:', role);
+      const result = await login(credentials.email, credentials.password);
+      console.log('Demo login result:', result);
+      
+      if (!result.success) {
+        setErrors({ submit: result.error || 'Login failed' });
+        return;
+      }
+      
+      // Wait for state update
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Redirect based on role
+      console.log('Demo login - Checking user role for redirect:', result.user?.role);
+      if (result.user?.role === 'admin') {
+        console.log('Redirecting demo admin to /only-admin');
+        window.location.href = '/only-admin';
+      } else {
+        console.log('Redirecting demo user to /');
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Demo login error:', error);
+      setErrors({ submit: 'Login failed. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -247,21 +274,17 @@ export default function SignInPage() {
               </div>
             )}
 
-            {/* Demo Login Buttons */}
-            <div className="space-y-3">
+            {/* Admin Login Hint */}
+            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-700 dark:text-blue-300 text-center mb-2">
+                Admin access requires special credentials
+              </p>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('admin')}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
+                className="w-full mt-2 px-4 py-2 text-sm bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition"
               >
-                Login as Admin (tebia@gmail.com)
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('user')}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl"
-              >
-                Login as Demo User
+                Test Admin Login (tebia@gmail.com)
               </button>
             </div>
           </form>
