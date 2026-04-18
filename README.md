@@ -1,36 +1,214 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SwiftLogistics - Premium Logistics Platform
 
-## Getting Started
+A modern, premium logistics and delivery platform built with Next.js 14, featuring real-time tracking, interactive maps, and dynamic branding.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Core Features
+- **Real-time Package Tracking** - Track shipments with live updates
+- **Interactive Map Visualization** - Simulated package movement with smooth animations
+- **Dynamic Branding** - Easily customizable colors, fonts, and branding
+- **Premium UI/UX** - Modern, minimalist design with smooth animations
+- **Responsive Design** - Works seamlessly on all devices
+
+### Technical Features
+- **Next.js 14** with App Router
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **Framer Motion** for smooth animations
+- **Supabase Integration** (ready for backend)
+- **Mock Data System** for development
+
+## 🏗️ Project Structure
+
+```
+shipping-platform/
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx           # Root layout with dynamic theming
+│   │   ├── page.tsx            # Home page
+│   │   ├── tracking/
+│   │   │   └── page.tsx        # Tracking page
+│   │   └── globals.css         # Global styles
+│   ├── components/
+│   │   ├── Navigation.tsx      # Main navigation
+│   │   ├── HeroSection.tsx     # Hero section
+│   │   ├── TrackingSection.tsx # Tracking input section
+│   │   ├── FeaturesSection.tsx # Features showcase
+│   │   ├── StatsSection.tsx    # Statistics and milestones
+│   │   ├── CtaSection.tsx      # Call-to-action sections
+│   │   ├── TrackingMap.tsx     # Interactive map component
+│   │   ├── PackageDetails.tsx  # Package details card
+│   │   ├── TrackingHistory.tsx # Tracking timeline
+│   │   └── Footer.tsx          # Site footer
+│   └── lib/
+│       ├── theme.ts            # Dynamic branding configuration
+│       └── supabase.ts         # Supabase client and types
+├── public/                     # Static assets
+└── package.json
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Dynamic Branding
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The platform features a comprehensive dynamic branding system. Update the `themeConfig` in `src/lib/theme.ts` to customize:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Brand name and tagline
+- Color palette (primary, secondary, accent colors)
+- Typography settings
+- Spacing and border radius
+- Animation durations
+- Shadows and effects
 
-## Learn More
+## 🗺️ Map Tracking
 
-To learn more about Next.js, take a look at the following resources:
+The platform includes a simulated map tracking system that shows package movement from origin to destination with:
+- Smooth animated package movement
+- Progress tracking
+- Real-time location updates
+- Interactive controls (pause/resume, zoom)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📦 Package Management
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- View detailed package information
+- Track shipment history with timeline
+- Update package status manually
+- Generate receipts (PDF ready)
+- Real-time status updates
 
-## Deploy on Vercel
+## 🚀 Getting Started
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd shipping-platform
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables (optional for Supabase):
+```bash
+cp .env.example .env.local
+```
+
+4. Run the development server:
+```bash
+npm run dev
+```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🔧 Configuration
+
+### Supabase Setup (Optional)
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Get your project URL and anon key
+3. Add to `.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+### Custom Branding
+Edit `src/lib/theme.ts` to customize:
+- Brand colors
+- Typography
+- Spacing
+- Animations
+
+## 📱 Pages
+
+### Home Page (`/`)
+- Hero section with tracking input
+- Features showcase
+- Statistics and milestones
+- Call-to-action sections
+
+### Tracking Page (`/tracking`)
+- Real-time package tracking
+- Interactive map visualization
+- Package details and history
+- Status updates and controls
+
+## 🎯 Design Philosophy
+
+The platform follows a premium design approach:
+- **Minimalist Layout** - Clean, uncluttered interface
+- **Smooth Animations** - Deliberate, purposeful motion
+- **Consistent Spacing** - Precise alignment and whitespace
+- **Premium Color Palette** - Sophisticated, brand-aligned colors
+- **Responsive Typography** - Modern, readable text hierarchy
+
+## 🔄 Real-time Updates
+
+The platform is ready for real-time updates with Supabase:
+- Live package status updates
+- Real-time location tracking
+- Instant notification system
+- WebSocket integration ready
+
+## 📄 Receipt Generation
+
+Ready for PDF receipt generation with:
+- Package details
+- Sender/receiver information
+- Tracking information
+- Branded layout
+
+## 🛠️ Development
+
+### Available Scripts
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+
+### Adding New Features
+1. Create components in `src/components/`
+2. Add pages in `src/app/`
+3. Update theme configuration in `src/lib/theme.ts`
+4. Extend Supabase types in `src/lib/supabase.ts`
+
+## 📈 Future Enhancements
+
+Planned features:
+- [ ] Real Supabase integration
+- [ ] User authentication
+- [ ] Admin dashboard
+- [ ] Mobile app
+- [ ] Advanced analytics
+- [ ] API documentation
+- [ ] Webhook integrations
+- [ ] Multi-language support
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org)
+- Styled with [Tailwind CSS](https://tailwindcss.com)
+- Animations with [Framer Motion](https://www.framer.com/motion/)
+- Icons from [Lucide React](https://lucide.dev)
+- Database with [Supabase](https://supabase.com)
+
+---
+
+**SwiftLogistics** - Transforming global logistics with premium technology solutions.
