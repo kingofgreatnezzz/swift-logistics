@@ -3,7 +3,19 @@
 -- URL: https://supabase.com/dashboard/project/YOUR_PROJECT_ID/sql
 
 -- ============================================
--- 1. CREATE PACKAGES TABLE
+-- 1. CREATE USERS TABLE (for authentication)
+-- ============================================
+CREATE TABLE IF NOT EXISTS public.users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  name TEXT,
+  role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================
+-- 2. CREATE PACKAGES TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS public.packages (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -25,27 +37,48 @@ CREATE TABLE IF NOT EXISTS public.packages (
 );
 
 -- ============================================
--- 2. CREATE INDEXES FOR PERFORMANCE
+-- 3. CREATE INDEXES FOR PERFORMANCE
 -- ============================================
+-- Users indexes
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
+
+-- Packages indexes
 CREATE INDEX IF NOT EXISTS idx_packages_tracking_number ON public.packages(tracking_number);
 CREATE INDEX IF NOT EXISTS idx_packages_status ON public.packages(status);
 CREATE INDEX IF NOT EXISTS idx_packages_created_at ON public.packages(created_at DESC);
 
 -- ============================================
--- 3. ENABLE ROW LEVEL SECURITY (RLS)
+-- 4. ENABLE ROW LEVEL SECURITY (RLS)
 -- ============================================
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.packages ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
--- 4. CREATE RLS POLICIES (OPEN FOR DEVELOPMENT)
+-- 5. CREATE RLS POLICIES (OPEN FOR DEVELOPMENT)
 -- ============================================
--- Allow ALL operations for development (remove in production)
-CREATE POLICY "Allow all operations for development" ON public.packages
+-- Users RLS policies
+CREATE POLICY "Allow all operations for development (users)" ON public.users
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Packages RLS policies
+CREATE POLICY "Allow all operations for development (packages)" ON public.packages
   FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================
--- 5. CREATE SAMPLE DATA
+-- 6. CREATE SAMPLE DATA
 -- ============================================
+-- Create sample admin user (change email as needed)
+INSERT INTO public.users (email, name, role) 
+VALUES ('admin@swiftlogistics.com', 'Admin User', 'admin')
+ON CONFLICT (email) DO NOTHING;
+
+-- Create sample regular user
+INSERT INTO public.users (email, name, role) 
+VALUES ('user@example.com', 'Regular User', 'user')
+ON CONFLICT (email) DO NOTHING;
+
+-- Create sample packages
 INSERT INTO public.packages (
   tracking_number,
   sender_name,
@@ -118,9 +151,22 @@ INSERT INTO public.packages (
   );
 
 -- ============================================
--- 6. VERIFY THE SETUP
+-- 7. VERIFY THE SETUP
 -- ============================================
--- Check table structure
+-- Check users table structure
+SELECT 'Users table:' as table_name;
+SELECT 
+  column_name,
+  data_type,
+  is_nullable,
+  column_default
+FROM information_schema.columns
+WHERE table_schema = 'public' 
+  AND table_name = 'users'
+ORDER BY ordinal_position;
+
+-- Check packages table structure
+SELECT 'Packages table:' as table_name;
 SELECT 
   column_name,
   data_type,
@@ -131,7 +177,14 @@ WHERE table_schema = 'public'
   AND table_name = 'packages'
 ORDER BY ordinal_position;
 
--- Check sample data
+-- Check sample users
+SELECT 'Sample users:' as section;
+SELECT id, email, name, role, created_at 
+FROM public.users 
+ORDER BY created_at DESC;
+
+-- Check sample packages
+SELECT 'Sample packages:' as section;
 SELECT 
   tracking_number,
   sender_name,
@@ -144,7 +197,7 @@ FROM public.packages
 ORDER BY created_at DESC;
 
 -- ============================================
--- 7. CREATE FUNCTION TO UPDATE TIMESTAMP
+-- 8. CREATE FUNCTION TO UPDATE TIMESTAMP
 -- ============================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -155,8 +208,16 @@ END;
 $$ language 'plpgsql';
 
 -- ============================================
--- 8. CREATE TRIGGER FOR AUTO-UPDATE
+-- 9. CREATE TRIGGERS FOR AUTO-UPDATE
 -- ============================================
+-- For users table
+DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
+CREATE TRIGGER update_users_updated_at
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- For packages table
 DROP TRIGGER IF EXISTS update_packages_updated_at ON public.packages;
 CREATE TRIGGER update_packages_updated_at
   BEFORE UPDATE ON public.packages
@@ -164,7 +225,7 @@ CREATE TRIGGER update_packages_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- 9. CREATE FUNCTION TO GENERATE TRACKING NUMBER
+-- 10. CREATE FUNCTION TO GENERATE TRACKING NUMBER
 -- ============================================
 CREATE OR REPLACE FUNCTION generate_tracking_code()
 RETURNS TEXT AS $$
@@ -198,16 +259,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================
--- 10. TEST THE GENERATOR FUNCTION
+-- 11. TEST THE GENERATOR FUNCTION
 -- ============================================
 SELECT generate_tracking_code() AS new_tracking_code;
 
 -- ============================================
--- 11. SUMMARY
+-- 12. SUMMARY
 -- ============================================
 SELECT '✅ SUPABASE SETUP COMPLETE!' AS message;
 SELECT 
-  COUNT(*) AS total_packages,
-  COUNT(DISTINCT tracking_number) AS unique_tracking_numbers,
-  SUM(item_value) AS total_declared_value
-FROM public.packages;
+  (SELECT COUNT(*) FROM public.users) AS total_users,
+  (SELECT COUNT(*) FROM public.packages) AS total_packages,
+  (SELECT COUNT(DISTINCT tracking_number) FROM public.packages) AS unique_tracking_numbers,
+  (SELECT SUM(item_value) FROM public.packages) AS total_declared_value;
