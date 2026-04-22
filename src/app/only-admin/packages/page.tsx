@@ -15,6 +15,8 @@ interface FrontendPackage {
   recipientAddress: string;
   weight: number;
   dimensions: string;
+  itemName: string;
+  itemDescription: string;
   itemValue: number;
   status: string;
   estimatedDelivery: string;
@@ -22,7 +24,7 @@ interface FrontendPackage {
   updatedAt: string;
   userId: string;
 }
-import { Package as PackageIcon, Edit, Trash2, Eye, Filter, Search, Plus, ArrowUpDown, CheckCircle, XCircle, Clock, Truck, Home, MapPin, Printer } from 'lucide-react';
+import { Package as PackageIcon, Edit, Trash2, Eye, Filter, Search, Plus, ArrowUpDown, CheckCircle, XCircle, Clock, Truck, Home, MapPin, Printer, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Tracking code generator
@@ -73,6 +75,8 @@ export default function SecretPackageManagement() {
     recipientAddress: '',
     weight: 1.0,
     dimensions: '30x20x15 cm',
+    itemName: '',
+    itemDescription: '',
     itemValue: 0,
     status: 'pending',
     estimatedDelivery: new Date().toISOString().split('T')[0]
@@ -322,7 +326,7 @@ export default function SecretPackageManagement() {
     try {
       console.log('Creating package in Supabase:', newPackage.trackingNumber);
 
-      // Insert into Supabase - including item_value
+      // Insert into Supabase - including item_name, item_description, and item_value
       const { data, error } = await supabase
         .from('packages')
         .insert([{
@@ -333,6 +337,8 @@ export default function SecretPackageManagement() {
           receiver_address: newPackage.recipientAddress,
           weight_kg: newPackage.weight,
           dimensions: newPackage.dimensions,
+          item_name: newPackage.itemName || '',
+          item_description: newPackage.itemDescription || '',
           item_value: newPackage.itemValue || 0,
           status: newPackage.status,
           estimated_delivery: newPackage.estimatedDelivery,
@@ -406,6 +412,8 @@ export default function SecretPackageManagement() {
       recipientAddress: '',
       weight: 1.0,
       dimensions: '30x20x15 cm',
+      itemName: '',
+      itemDescription: '',
       itemValue: 0,
       status: 'pending',
       estimatedDelivery: new Date().toISOString().split('T')[0]
@@ -453,10 +461,10 @@ export default function SecretPackageManagement() {
         <body>
           <div class="receipt">
             <div class="header">
-              <div class="company-name">BLUEBIRD SHIPPING</div>
+              <div class="company-name">swiftlogistics</div>
               <div class="company-tagline">Fast & Reliable Worldwide Delivery</div>
-              <div>123 Shipping Ave, Logistics City, LC 10001</div>
-              <div>Phone: (555) 123-4567 | Email: info@bluebirdshipping.com</div>
+              <div>123 Logistics Ave, Swift City, SC 10001</div>
+              <div>Phone: (555) 987-6543 | Email: info@swiftlogistics.com</div>
             </div>
 
             <div class="tracking-number">TRACKING #: ${receiptPackage.trackingNumber}</div>
@@ -519,6 +527,18 @@ export default function SecretPackageManagement() {
                 <div class="label">Dimensions:</div>
                 <div class="value">${receiptPackage.dimensions}</div>
               </div>
+              ${receiptPackage.itemName ? `<div class="row">
+                <div class="label">Item Name:</div>
+                <div class="value">${receiptPackage.itemName}</div>
+              </div>` : ''}
+              ${receiptPackage.itemDescription ? `<div class="row">
+                <div class="label">Item Description:</div>
+                <div class="value">${receiptPackage.itemDescription}</div>
+              </div>` : ''}
+              <div class="row">
+                <div class="label">Declared Value:</div>
+                <div class="value">$${(receiptPackage.itemValue || 0).toLocaleString()}</div>
+              </div>
             </div>
 
             <div class="barcode">
@@ -534,6 +554,162 @@ export default function SecretPackageManagement() {
       `);
       printWindow.document.close();
       printWindow.print();
+    }
+  };
+
+  // Download receipt as PDF
+  const downloadReceipt = () => {
+    if (!receiptPackage) return;
+
+    // Create a printable HTML content
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Shipping Receipt - ${receiptPackage.trackingNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; }
+          .receipt { max-width: 600px; margin: 0 auto; border: 2px solid #000; padding: 30px; }
+          .header { text-align: center; margin-bottom: 30px; }
+          .company-name { font-size: 28px; font-weight: bold; margin-bottom: 5px; }
+          .company-tagline { font-size: 14px; color: #666; margin-bottom: 20px; }
+          .section { margin-bottom: 25px; }
+          .section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+          .row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+          .label { font-weight: bold; }
+          .value { text-align: right; }
+          .barcode { text-align: center; font-family: monospace; background: #f0f0f0; padding: 10px; margin: 20px 0; }
+          .status-badge { 
+            display: inline-block; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            font-weight: bold; 
+          }
+          .status-badge.pending { background: #fef3c7; color: #92400e; }
+          .status-badge.in_transit { background: #dbeafe; color: #1e40af; }
+          .status-badge.delivered { background: #d1fae5; color: #065f46; }
+          .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+          .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #666; }
+          @media print {
+            body { margin: 0; }
+            .receipt { border: none; padding: 20px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="header">
+            <div class="company-name">swiftlogistics</div>
+            <div class="company-tagline">Fast & Reliable Worldwide Delivery</div>
+            <div>123 Logistics Ave, Swift City, SC 10001</div>
+            <div>Phone: (555) 987-6543 | Email: info@swiftlogistics.com</div>
+          </div>
+
+          <div class="barcode">
+            TRACKING #: ${receiptPackage.trackingNumber}
+          </div>
+
+          <div class="section">
+            <div class="section-title">SHIPMENT DETAILS</div>
+            <div class="row">
+              <div class="label">Tracking Number:</div>
+              <div class="value">${receiptPackage.trackingNumber}</div>
+            </div>
+            <div class="row">
+              <div class="label">Package ID:</div>
+              <div class="value">${receiptPackage.id}</div>
+            </div>
+            <div class="row">
+              <div class="label">Status:</div>
+              <div class="value">
+                <span class="status-badge ${receiptPackage.status}">
+                  ${receiptPackage.status.toUpperCase().replace('_', ' ')}
+                </span>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">Created Date:</div>
+              <div class="value">${receiptPackage.createdAt}</div>
+            </div>
+            <div class="row">
+              <div class="label">Estimated Delivery:</div>
+              <div class="value">${receiptPackage.estimatedDelivery}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">PACKAGE SPECIFICATIONS</div>
+            <div class="row">
+              <div class="label">Weight:</div>
+              <div class="value">${receiptPackage.weight} kg</div>
+            </div>
+            <div class="row">
+              <div class="label">Dimensions:</div>
+              <div class="value">${receiptPackage.dimensions}</div>
+            </div>
+            ${receiptPackage.itemName ? `<div class="row">
+              <div class="label">Item Name:</div>
+              <div class="value">${receiptPackage.itemName}</div>
+            </div>` : ''}
+            ${receiptPackage.itemDescription ? `<div class="row">
+              <div class="label">Item Description:</div>
+              <div class="value">${receiptPackage.itemDescription}</div>
+            </div>` : ''}
+            <div class="row">
+              <div class="label">Declared Value:</div>
+              <div class="value">$${(receiptPackage.itemValue || 0).toLocaleString()}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">SENDER INFORMATION</div>
+            <div class="row">
+              <div class="label">Name:</div>
+              <div class="value">${receiptPackage.senderName}</div>
+            </div>
+            <div class="row">
+              <div class="label">Address:</div>
+              <div class="value">${receiptPackage.senderAddress}</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">RECIPIENT INFORMATION</div>
+            <div class="row">
+              <div class="label">Name:</div>
+              <div class="value">${receiptPackage.recipientName}</div>
+            </div>
+            <div class="row">
+              <div class="label">Address:</div>
+              <div class="value">${receiptPackage.recipientAddress}</div>
+            </div>
+          </div>
+
+          <div class="barcode">
+            BARCODE: ${receiptPackage.trackingNumber}
+          </div>
+
+          <div class="footer">
+            Receipt generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}<br>
+            swiftlogistics - Fast & Reliable Worldwide Delivery
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Open in new window and trigger print (user can save as PDF)
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(receiptHTML);
+      printWindow.document.close();
+      
+      // Wait for content to load then trigger print
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
     }
   };
 
@@ -1024,7 +1200,8 @@ export default function SecretPackageManagement() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Package Details - Vertical Stack */}
+              <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Weight (kg)</label>
                   <input
@@ -1044,6 +1221,25 @@ export default function SecretPackageManagement() {
                     value={createForm.dimensions}
                     onChange={(e) => setCreateForm({ ...createForm, dimensions: e.target.value })}
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Item Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Electronics, Documents, Clothing"
+                    value={createForm.itemName}
+                    onChange={(e) => setCreateForm({ ...createForm, itemName: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Item Description</label>
+                  <textarea
+                    placeholder="Describe the item contents"
+                    value={createForm.itemDescription}
+                    onChange={(e) => setCreateForm({ ...createForm, itemDescription: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 min-h-[100px]"
                   />
                 </div>
                 <div>
@@ -1085,6 +1281,8 @@ export default function SecretPackageManagement() {
                     recipientAddress: '',
                     weight: 1.0,
                     dimensions: '30x20x15 cm',
+                    itemName: '',
+                    itemDescription: '',
                     itemValue: 0,
                     status: 'pending',
                     estimatedDelivery: new Date().toISOString().split('T')[0]
@@ -1122,6 +1320,8 @@ export default function SecretPackageManagement() {
                     recipientAddress: createForm.recipientAddress,
                     weight: createForm.weight,
                     dimensions: createForm.dimensions,
+                    itemName: createForm.itemName,
+                    itemDescription: createForm.itemDescription,
                     itemValue: createForm.itemValue,
                     status: createForm.status,
                     estimatedDelivery: createForm.estimatedDelivery,
@@ -1145,6 +1345,8 @@ export default function SecretPackageManagement() {
                     recipientAddress: '',
                     weight: 1.0,
                     dimensions: '30x20x15 cm',
+                    itemName: '',
+                    itemDescription: '',
                     itemValue: 0,
                     status: 'pending',
                     estimatedDelivery: new Date().toISOString().split('T')[0]
@@ -1164,10 +1366,10 @@ export default function SecretPackageManagement() {
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-white">BLUEBIRD SHIPPING</h2>
+              <h2 className="text-2xl font-bold text-white">swiftlogistics</h2>
               <p className="text-gray-300 text-sm mt-1">Fast & Reliable Worldwide Delivery</p>
-              <p className="text-gray-400 text-xs mt-2">123 Shipping Ave, Logistics City, LC 10001</p>
-              <p className="text-gray-400 text-xs">Phone: (555) 123-4567 | Email: info@bluebirdshipping.com</p>
+              <p className="text-gray-400 text-xs mt-2">123 Logistics Ave, Swift City, SC 10001</p>
+              <p className="text-gray-400 text-xs">Phone: (555) 987-6543 | Email: info@swiftlogistics.com</p>
             </div>
 
             <div className="text-center bg-gray-700 py-3 mb-6 rounded-lg">
@@ -1214,6 +1416,22 @@ export default function SecretPackageManagement() {
                     <span className="text-gray-300">Dimensions:</span>
                     <span className="font-medium text-white">{receiptPackage.dimensions}</span>
                   </div>
+                  {receiptPackage.itemName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Item Name:</span>
+                      <span className="font-medium text-white">{receiptPackage.itemName}</span>
+                    </div>
+                  )}
+                  {receiptPackage.itemDescription && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-300">Item Description:</span>
+                      <span className="font-medium text-white">{receiptPackage.itemDescription}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-300">Declared Value:</span>
+                    <span className="font-medium text-white">${(receiptPackage.itemValue || 0).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1252,6 +1470,13 @@ export default function SecretPackageManagement() {
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition"
               >
                 Close
+              </button>
+              <button
+                onClick={downloadReceipt}
+                className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Receipt
               </button>
               <button
                 onClick={printReceipt}
