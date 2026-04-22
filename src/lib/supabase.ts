@@ -146,23 +146,6 @@ export const packageService = {
       )
       .subscribe();
   },
-
-  // Subscribe to tracking updates
-  subscribeToTrackingUpdates(packageId: string, callback: (update: TrackingUpdate) => void) {
-    return supabase
-      .channel(`tracking:${packageId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'tracking_updates',
-          filter: `package_id=eq.${packageId}`,
-        },
-        (payload) => callback(payload.new as TrackingUpdate)
-      )
-      .subscribe();
-  },
 };
 
 // Mock data for development
@@ -222,58 +205,3 @@ export const mockPackages: Package[] = [
     updated_at: '2024-04-18T09:15:00Z',
   },
 ];
-
-export const mockTrackingUpdates: Record<string, TrackingUpdate[]> = {
-  '1': [
-    {
-      id: '1',
-      package_id: '1',
-      status: 'pending',
-      location: 'Cupertino, USA',
-      description: 'Package received at origin facility',
-      timestamp: '2024-04-15T09:30:00Z',
-    },
-    {
-      id: '2',
-      package_id: '1',
-      status: 'processing',
-      location: 'San Francisco Airport',
-      description: 'Package processed for international shipping',
-      timestamp: '2024-04-16T14:20:00Z',
-    },
-    {
-      id: '3',
-      package_id: '1',
-      status: 'in_transit',
-      location: 'London Heathrow Airport',
-      description: 'Package arrived at destination country',
-      timestamp: '2024-04-18T08:45:00Z',
-    },
-  ],
-  '2': [
-    {
-      id: '4',
-      package_id: '2',
-      status: 'pending',
-      location: 'Berlin, Germany',
-      description: 'Express package received',
-      timestamp: '2024-04-17T14:20:00Z',
-    },
-    {
-      id: '5',
-      package_id: '2',
-      status: 'in_transit',
-      location: 'Frankfurt Airport',
-      description: 'Package departed for destination',
-      timestamp: '2024-04-17T18:30:00Z',
-    },
-    {
-      id: '6',
-      package_id: '2',
-      status: 'out_for_delivery',
-      location: 'Paris Distribution Center',
-      description: 'Package out for delivery',
-      timestamp: '2024-04-18T09:15:00Z',
-    },
-  ],
-};

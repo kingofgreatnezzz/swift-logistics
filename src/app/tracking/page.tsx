@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Search, Package as PackageIcon, MapPin, Clock, Truck, CheckCircle, AlertCircle } from 'lucide-react';
@@ -10,7 +10,7 @@ import PackageDetails from '@/components/PackageDetails';
 import { packageService } from '@/lib/supabase';
 import type { Package } from '@/lib/supabase';
 
-export default function TrackingPage() {
+function TrackingContent() {
   const searchParams = useSearchParams();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -347,5 +347,13 @@ export default function TrackingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TrackingPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading tracking...</div>}>
+      <TrackingContent />
+    </Suspense>
   );
 }
