@@ -27,10 +27,16 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [currentPath, setCurrentPath] = useState('');
-  
+
   useEffect(() => {
     setCurrentPath(window.location.pathname);
   }, []);
+
+  // Hide navbar on auth pages
+  const isAuthPage = currentPath.startsWith('/signin') || currentPath.startsWith('/signup');
+  if (isAuthPage) {
+    return null;
+  }
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-gray-200/50 bg-white/80 backdrop-blur-xl dark:border-gray-800/50 dark:bg-gray-900/80">
@@ -64,7 +70,7 @@ export default function Navigation() {
                 {item.name}
               </Link>
             ))}
-            
+
             {/* Admin Access Button - Only show on non-admin pages */}
             {isAdmin && !currentPath.startsWith('/only-admin') && (
               <Link href="/only-admin">
@@ -154,7 +160,7 @@ export default function Navigation() {
                     {item.name}
                   </Link>
                 ))}
-                
+
                 {/* Admin Section - Only for admin users */}
                 {isAdmin && (
                   <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
@@ -174,7 +180,7 @@ export default function Navigation() {
                     ))}
                   </div>
                 )}
-                
+
                 {/* Auth Section */}
                 <div className="border-t border-gray-200 pt-4 dark:border-gray-800">
                   {user ? (

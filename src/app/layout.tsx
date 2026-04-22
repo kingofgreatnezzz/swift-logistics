@@ -39,7 +39,7 @@ export default function RootLayout({
       <body className="antialiased">
         <div className="min-h-screen bg-white dark:bg-gray-900">
           <Navigation />
-          <main className="relative">
+          <main className="relative pt-20">
             {children}
           </main>
           <Footer />

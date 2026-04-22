@@ -274,19 +274,7 @@ export default function SignInPage() {
               </div>
             )}
 
-            {/* Admin Login Hint */}
-            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-700 dark:text-blue-300 text-center mb-2">
-                Admin access requires special credentials
-              </p>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('admin')}
-                className="w-full mt-2 px-4 py-2 text-sm bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition"
-              >
-                Test Admin Login (tebia@gmail.com)
-              </button>
-            </div>
+
           </form>
 
           {/* Divider */}

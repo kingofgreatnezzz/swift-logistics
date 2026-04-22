@@ -84,12 +84,12 @@ export default function Footer() {
                 <div className="h-1 w-8 rounded-full bg-gradient-to-r from-blue-600 to-purple-600" />
               </div>
             </div>
-            
+
             <p className="mt-6 max-w-md text-gray-600 dark:text-gray-300">
-              Premium logistics and delivery solutions powered by cutting-edge technology. 
+              Premium logistics and delivery solutions powered by cutting-edge technology.
               Transforming global supply chains with AI, automation, and real-time tracking.
             </p>
-            
+
             <div className="mt-8 space-y-4">
               {contactInfo.map((info, index) => (
                 <motion.a
@@ -111,7 +111,7 @@ export default function Footer() {
                 </motion.a>
               ))}
             </div>
-            
+
             <div className="mt-8 flex items-center gap-4">
               {socialLinks.map((social, index) => (
                 <motion.a
@@ -179,7 +179,7 @@ export default function Footer() {
               Built with Next.js, Supabase, and cutting-edge technology.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center justify-center gap-6">
             <button className="text-sm text-gray-600 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-400">
               Privacy Settings
@@ -208,21 +208,21 @@ export default function Footer() {
                 <div className="text-sm text-gray-600 dark:text-gray-300">Certified</div>
               </div>
             </div>
-            
+
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-3 dark:border-gray-800 dark:bg-gray-800">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">GDPR</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Compliant</div>
               </div>
             </div>
-            
+
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-3 dark:border-gray-800 dark:bg-gray-800">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">99.9%</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Uptime SLA</div>
               </div>
             </div>
-            
+
             <div className="rounded-xl border border-gray-200 bg-gray-50 px-6 py-3 dark:border-gray-800 dark:bg-gray-800">
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">256-bit</div>

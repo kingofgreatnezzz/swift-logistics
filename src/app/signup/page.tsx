@@ -5,9 +5,11 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, User, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { createUser, login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -65,30 +67,27 @@ export default function SignUpPage() {
     setIsSubmitting(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create user in auth system
+      const newUser = createUser({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: formData.email === 'tebia@gmail.com' ? 'admin' : 'user'
+      });
       
-      // For demo purposes, create admin user if credentials match
-      if (formData.email === 'tebia@gmail.com' && formData.password === 'Password@1') {
-        localStorage.setItem('user', JSON.stringify({
-          username: 'tebia',
-          email: 'tebia@gmail.com',
-          role: 'admin',
-          isAuthenticated: true
-        }));
-      } else {
-        localStorage.setItem('user', JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          role: 'user',
-          isAuthenticated: true
-        }));
+      // Auto-login after registration
+      const loginResult = await login(formData.email, formData.password);
+      
+      if (!loginResult.success) {
+        setErrors({ submit: 'Registration successful but login failed. Please try logging in.' });
+        return;
       }
       
       // Redirect to home page
       router.push('/');
       router.refresh();
     } catch (error) {
+      console.error('Registration error:', error);
       setErrors({ submit: 'Registration failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -352,15 +351,7 @@ export default function SignUpPage() {
               </div>
             )}
 
-            {/* Demo Credentials */}
-            <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
-                Demo Admin Credentials:
-              </p>
-              <p className="text-xs text-blue-700 dark:text-blue-400">
-                Email: tebia@gmail.com | Password: Password@1
-              </p>
-            </div>
+
           </form>
 
           {/* Login Link */}
