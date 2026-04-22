@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Search, Package as PackageIcon, MapPin, Clock, Truck, CheckCircle, AlertCircle } from 'lucide-react';
 import TrackingMap from '@/components/TrackingMap';
@@ -10,24 +11,32 @@ import { packageService } from '@/lib/supabase';
 import type { Package } from '@/lib/supabase';
 
 export default function TrackingPage() {
+  const searchParams = useSearchParams();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [error, setError] = useState<string>('');
 
-  const handleTrack = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!trackingNumber.trim()) {
-      setError('Please enter a tracking number');
-      return;
+  // Auto-track when page loads with tracking query parameter
+  useEffect(() => {
+    const trackingFromUrl = searchParams.get('tracking');
+    if (trackingFromUrl) {
+      setTrackingNumber(trackingFromUrl);
+      // Trigger tracking after a short delay to ensure state is set
+      setTimeout(() => {
+        handleAutoTrack(trackingFromUrl);
+      }, 100);
     }
+  }, [searchParams]);
+
+  const handleAutoTrack = async (trackingNum: string) => {
+    if (!trackingNum.trim()) return;
     
     setIsLoading(true);
     setError('');
     
     try {
-      // Find package by tracking number using Supabase
-      const foundPackage = await packageService.getPackageByTrackingNumber(trackingNumber.trim());
+      const foundPackage = await packageService.getPackageByTrackingNumber(trackingNum.trim());
       
       if (foundPackage) {
         setSelectedPackage(foundPackage);
@@ -39,10 +48,20 @@ export default function TrackingPage() {
       console.error('Error tracking package:', err);
       setError('Failed to track package. Please try again.');
       setSelectedPackage(null);
-      setTrackingHistory([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleTrack = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trackingNumber.trim()) {
+      setError('Please enter a tracking number');
+      return;
+    }
+    
+    // Use the same logic as auto-track
+    handleAutoTrack(trackingNumber);
   };
 
   const getStatusColor = (status: string) => {

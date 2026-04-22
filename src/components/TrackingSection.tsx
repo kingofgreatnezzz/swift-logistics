@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Search, Package, MapPin, Clock } from 'lucide-react';
 import { themeConfig } from '@/lib/theme';
 
 export default function TrackingSection() {
+  const router = useRouter();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -14,12 +16,12 @@ export default function TrackingSection() {
     if (!trackingNumber.trim()) return;
     
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsLoading(false);
     
-    // In a real app, this would navigate to the tracking page
-    console.log('Tracking:', trackingNumber);
+    // Navigate to tracking page with the tracking number as query parameter
+    router.push(`/tracking?tracking=${encodeURIComponent(trackingNumber.trim())}`);
+    
+    // Note: The tracking page will handle the actual tracking logic
+    // We don't need to wait here since navigation happens immediately
   };
 
   return (
