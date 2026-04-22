@@ -15,6 +15,7 @@ interface FrontendPackage {
   recipientAddress: string;
   weight: number;
   dimensions: string;
+  itemValue: number;
   status: string;
   estimatedDelivery: string;
   createdAt: string;
@@ -72,6 +73,7 @@ export default function SecretPackageManagement() {
     recipientAddress: '',
     weight: 1.0,
     dimensions: '30x20x15 cm',
+    itemValue: 0,
     status: 'pending',
     estimatedDelivery: new Date().toISOString().split('T')[0]
   });
@@ -320,7 +322,7 @@ export default function SecretPackageManagement() {
     try {
       console.log('Creating package in Supabase:', newPackage.trackingNumber);
 
-      // Insert into Supabase
+      // Insert into Supabase - including item_value
       const { data, error } = await supabase
         .from('packages')
         .insert([{
@@ -331,6 +333,7 @@ export default function SecretPackageManagement() {
           receiver_address: newPackage.recipientAddress,
           weight_kg: newPackage.weight,
           dimensions: newPackage.dimensions,
+          item_value: newPackage.itemValue || 0,
           status: newPackage.status,
           estimated_delivery: newPackage.estimatedDelivery,
           created_at: new Date().toISOString(),
@@ -403,6 +406,7 @@ export default function SecretPackageManagement() {
       recipientAddress: '',
       weight: 1.0,
       dimensions: '30x20x15 cm',
+      itemValue: 0,
       status: 'pending',
       estimatedDelivery: new Date().toISOString().split('T')[0]
     });
@@ -1020,7 +1024,7 @@ export default function SecretPackageManagement() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-2">Weight (kg)</label>
                   <input
@@ -1039,6 +1043,18 @@ export default function SecretPackageManagement() {
                     placeholder="30x20x15 cm"
                     value={createForm.dimensions}
                     onChange={(e) => setCreateForm({ ...createForm, dimensions: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Declared Value ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={createForm.itemValue}
+                    onChange={(e) => setCreateForm({ ...createForm, itemValue: parseFloat(e.target.value) || 0 })}
                     className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
                   />
                 </div>
@@ -1069,6 +1085,7 @@ export default function SecretPackageManagement() {
                     recipientAddress: '',
                     weight: 1.0,
                     dimensions: '30x20x15 cm',
+                    itemValue: 0,
                     status: 'pending',
                     estimatedDelivery: new Date().toISOString().split('T')[0]
                   });
@@ -1105,6 +1122,7 @@ export default function SecretPackageManagement() {
                     recipientAddress: createForm.recipientAddress,
                     weight: createForm.weight,
                     dimensions: createForm.dimensions,
+                    itemValue: createForm.itemValue,
                     status: createForm.status,
                     estimatedDelivery: createForm.estimatedDelivery,
                     createdAt: new Date().toISOString().split('T')[0],
@@ -1127,6 +1145,7 @@ export default function SecretPackageManagement() {
                     recipientAddress: '',
                     weight: 1.0,
                     dimensions: '30x20x15 cm',
+                    itemValue: 0,
                     status: 'pending',
                     estimatedDelivery: new Date().toISOString().split('T')[0]
                   });

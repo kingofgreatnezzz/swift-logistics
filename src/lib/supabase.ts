@@ -40,15 +40,6 @@ export interface Package {
   updated_at: string;
 }
 
-export interface TrackingUpdate {
-  id: string;
-  package_id: string;
-  status: PackageStatus;
-  location: string;
-  description: string;
-  timestamp: string;
-}
-
 // Package operations
 export const packageService = {
   // Get package by tracking number
@@ -62,22 +53,6 @@ export const packageService = {
     if (error) {
       console.error('Error fetching package:', error);
       return null;
-    }
-
-    return data;
-  },
-
-  // Get tracking history for a package
-  async getTrackingHistory(packageId: string): Promise<TrackingUpdate[]> {
-    const { data, error } = await supabase
-      .from('tracking_updates')
-      .select('*')
-      .eq('package_id', packageId)
-      .order('timestamp', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching tracking history:', error);
-      return [];
     }
 
     return data;

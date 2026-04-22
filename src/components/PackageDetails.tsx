@@ -41,12 +41,12 @@ export default function PackageDetails({ package: pkg }: PackageDetailsProps) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
               <div className="text-sm text-gray-500 dark:text-gray-400">Item Name</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">{pkg.item_name}</div>
+              <div className="text-lg font-semibold text-gray-900 dark:text-white">{pkg.item_name || 'Package'}</div>
             </div>
             
             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
               <div className="text-sm text-gray-500 dark:text-gray-400">Description</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">{pkg.item_description}</div>
+              <div className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">{pkg.item_description || 'No description'}</div>
             </div>
             
             <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
@@ -55,7 +55,7 @@ export default function PackageDetails({ package: pkg }: PackageDetailsProps) {
                 Declared Value
               </div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                ${pkg.item_value.toLocaleString()}
+                ${(pkg.item_value || 0).toLocaleString()}
               </div>
             </div>
             
@@ -86,26 +86,26 @@ export default function PackageDetails({ package: pkg }: PackageDetailsProps) {
           <div className="space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Name</div>
-              <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_name}</div>
+              <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_name || 'Not specified'}</div>
             </div>
             
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Address</div>
-              <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_address}</div>
+              <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_address || 'Not specified'}</div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                {pkg.sender_city}, {pkg.sender_country}
+                {(pkg.sender_city || pkg.sender_country) ? `${pkg.sender_city || ''}${pkg.sender_city && pkg.sender_country ? ', ' : ''}${pkg.sender_country || ''}` : 'Not specified'}
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>
-                <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_email}</div>
+                <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_email || 'Not specified'}</div>
               </div>
               
               <div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Phone</div>
-                <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_phone}</div>
+                <div className="font-medium text-gray-900 dark:text-white">{pkg.sender_phone || 'Not specified'}</div>
               </div>
             </div>
           </div>
@@ -126,26 +126,26 @@ export default function PackageDetails({ package: pkg }: PackageDetailsProps) {
           <div className="space-y-3 rounded-lg bg-gray-50 p-4 dark:bg-gray-700/50">
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Name</div>
-              <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_name}</div>
+              <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_name || 'Not specified'}</div>
             </div>
             
             <div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Address</div>
-              <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_address}</div>
+              <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_address || 'Not specified'}</div>
               <div className="text-sm text-gray-600 dark:text-gray-300">
-                {pkg.receiver_city}, {pkg.receiver_country}
+                {(pkg.receiver_city || pkg.receiver_country) ? `${pkg.receiver_city || ''}${pkg.receiver_city && pkg.receiver_country ? ', ' : ''}${pkg.receiver_country || ''}` : 'Not specified'}
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Email</div>
-                <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_email}</div>
+                <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_email || 'Not specified'}</div>
               </div>
               
               <div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">Phone</div>
-                <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_phone}</div>
+                <div className="font-medium text-gray-900 dark:text-white">{pkg.receiver_phone || 'Not specified'}</div>
               </div>
             </div>
           </div>
