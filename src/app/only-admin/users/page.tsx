@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
+import { useAuth, type User } from '@/lib/auth';
 import { motion } from 'framer-motion';
 import { Users, UserPlus, Mail, Shield, Calendar, Edit, Trash2, Search, Filter, Lock, Unlock } from 'lucide-react';
 
 export default function SecretUserManagement() {
   const { user, isAdmin, getAllUsers, updateUser, deleteUser, createUser, isLoading } = useAuth();
   const router = useRouter();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -22,12 +22,10 @@ export default function SecretUserManagement() {
 
   // Load users when component mounts and user is admin
   useEffect(() => {
-    if (user && isAdmin && users.length === 0) {
-      // Load users directly to avoid dependency loop
-      const loadedUsers = getAllUsers();
-      setUsers(loadedUsers);
+    if (user && isAdmin) {
+      getAllUsers().then(setUsers);
     }
-  }, [user, isAdmin, users.length]); // Removed getAllUsers from dependencies
+  }, [user, isAdmin]);
 
   // Redirect if not admin (after loading)
   useEffect(() => {
@@ -77,34 +75,37 @@ export default function SecretUserManagement() {
     u.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (!newUser.username || !newUser.email || !newUser.password) {
       alert('Please fill all fields');
       return;
     }
 
-    createUser({
+    await createUser({
       username: newUser.username,
       email: newUser.email,
       password: newUser.password,
       role: newUser.role
     });
 
-    setUsers(getAllUsers());
+    const updated = await getAllUsers();
+    setUsers(updated);
     setNewUser({ username: '', email: '', password: '', role: 'user' });
     setIsAddingUser(false);
   };
 
-  const handleUpdateUser = (userId: string, updates: any) => {
-    updateUser(userId, updates);
-    setUsers(getAllUsers());
+  const handleUpdateUser = async (userId: string, updates: any) => {
+    await updateUser(userId, updates);
+    const updated = await getAllUsers();
+    setUsers(updated);
     setEditingUser(null);
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
-      deleteUser(userId);
-      setUsers(getAllUsers());
+      await deleteUser(userId);
+      const updated = await getAllUsers();
+      setUsers(updated);
     }
   };
 

@@ -1,274 +1,207 @@
--- MASTER SUPABASE SETUP SQL
--- Run this entire script in your Supabase SQL Editor to set up a new project
--- URL: https://supabase.com/dashboard/project/YOUR_PROJECT_ID/sql
+-- ============================================================
+-- SwiftLogistics – Complete Supabase Schema
+-- Run ONCE in your Supabase SQL Editor. Idempotent.
+-- https://supabase.com/dashboard/project/YOUR_PROJECT_ID/sql/new
+-- ============================================================
 
--- ============================================
--- 1. CREATE USERS TABLE (for authentication)
--- ============================================
+-- ── 1. USERS (authentication & roles) ────────────────────────
+
 CREATE TABLE IF NOT EXISTS public.users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  name TEXT,
-  role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email      TEXT UNIQUE NOT NULL,
+  username   TEXT UNIQUE,                   -- used for signup/login
+  name       TEXT,                          -- display name
+  password   TEXT,                          -- hashed password (bcrypt)
+  role       TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- ============================================
--- 2. CREATE PACKAGES TABLE
--- ============================================
-CREATE TABLE IF NOT EXISTS public.packages (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  tracking_number TEXT NOT NULL UNIQUE,
-  sender_name TEXT NOT NULL,
-  sender_address TEXT NOT NULL,
-  receiver_name TEXT NOT NULL,
-  receiver_address TEXT NOT NULL,
-  weight_kg DECIMAL(10,2) DEFAULT 1.0,
-  dimensions TEXT DEFAULT '30x20x15 cm',
-  item_name TEXT DEFAULT '',
-  item_description TEXT DEFAULT '',
-  item_value DECIMAL(10,2) DEFAULT 0,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_transit', 'delivered', 'cancelled')),
-  estimated_delivery DATE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  user_id TEXT DEFAULT 'user-1'
-);
-
--- ============================================
--- 3. CREATE INDEXES FOR PERFORMANCE
--- ============================================
--- Users indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username ON public.users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role ON public.users(role);
 
--- Packages indexes
+-- ── 2. PACKAGES (full schema the app expects) ─────────────────
+
+CREATE TABLE IF NOT EXISTS public.packages (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tracking_number     TEXT UNIQUE NOT NULL,
+  service_type        TEXT DEFAULT 'standard',    -- standard / express / international / overnight
+  priority            TEXT DEFAULT 'medium',       -- low / medium / high / urgent
+  weight_kg           NUMERIC(10,2) DEFAULT 1.0,
+  dimensions          TEXT DEFAULT '30x20x15 cm',
+  item_name           TEXT DEFAULT '',
+  item_description    TEXT DEFAULT '',
+  item_value          NUMERIC(10,2) DEFAULT 0,
+
+  sender_name         TEXT NOT NULL,
+  sender_address      TEXT NOT NULL,
+  sender_city         TEXT DEFAULT '',
+  sender_country      TEXT DEFAULT '',
+  sender_email        TEXT DEFAULT '',
+  sender_phone        TEXT DEFAULT '',
+
+  receiver_name       TEXT NOT NULL,
+  receiver_address    TEXT NOT NULL,
+  receiver_city       TEXT DEFAULT '',
+  receiver_country    TEXT DEFAULT '',
+  receiver_email      TEXT DEFAULT '',
+  receiver_phone      TEXT DEFAULT '',
+
+  status              TEXT DEFAULT 'pending' CHECK (status IN (
+                          'pending', 'processing', 'in_transit',
+                          'out_for_delivery', 'delivered', 'delayed', 'cancelled'
+                        )),
+  current_location    TEXT DEFAULT '',
+  estimated_delivery  TIMESTAMPTZ,
+  user_id             TEXT DEFAULT 'user-1',
+
+  created_at          TIMESTAMPTZ DEFAULT now(),
+  updated_at          TIMESTAMPTZ DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_packages_tracking_number ON public.packages(tracking_number);
 CREATE INDEX IF NOT EXISTS idx_packages_status ON public.packages(status);
 CREATE INDEX IF NOT EXISTS idx_packages_created_at ON public.packages(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_packages_user_id ON public.packages(user_id);
 
--- ============================================
--- 4. ENABLE ROW LEVEL SECURITY (RLS)
--- ============================================
+-- ── 3. TRACKING UPDATES (history timeline per package) ────────
+
+CREATE TABLE IF NOT EXISTS public.tracking_updates (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  package_id  UUID NOT NULL REFERENCES public.packages(id) ON DELETE CASCADE,
+  status      TEXT DEFAULT '',
+  location    TEXT DEFAULT '',
+  description TEXT DEFAULT '',
+  timestamp   TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_tracking_updates_package_id ON public.tracking_updates(package_id);
+CREATE INDEX IF NOT EXISTS idx_tracking_updates_timestamp ON public.tracking_updates(timestamp DESC);
+
+-- ── 4. ROW LEVEL SECURITY (open for development) ──────────────
+
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.packages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tracking_updates ENABLE ROW LEVEL SECURITY;
 
--- ============================================
--- 5. CREATE RLS POLICIES (OPEN FOR DEVELOPMENT)
--- ============================================
--- Users RLS policies
-CREATE POLICY "Allow all operations for development (users)" ON public.users
-  FOR ALL USING (true) WITH CHECK (true);
+-- Drop any leftover policies then recreate cleanly
+DROP POLICY IF EXISTS "Allow all operations for development (users)" ON public.users;
+DROP POLICY IF EXISTS "Allow all operations (users)" ON public.users;
+DROP POLICY IF EXISTS "allow_all_users" ON public.users;
 
--- Packages RLS policies
-CREATE POLICY "Allow all operations for development (packages)" ON public.packages
-  FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all operations for development (packages)" ON public.packages;
+DROP POLICY IF EXISTS "Allow all operations (packages)" ON public.packages;
+DROP POLICY IF EXISTS "allow_all_packages" ON public.packages;
 
--- ============================================
--- 6. CREATE SAMPLE DATA
--- ============================================
--- Create sample admin user (change email as needed)
-INSERT INTO public.users (email, name, role) 
-VALUES ('admin@swiftlogistics.com', 'Admin User', 'admin')
-ON CONFLICT (email) DO NOTHING;
+DROP POLICY IF EXISTS "allow_all_tracking" ON public.tracking_updates;
 
--- Create sample regular user
-INSERT INTO public.users (email, name, role) 
-VALUES ('user@example.com', 'Regular User', 'user')
-ON CONFLICT (email) DO NOTHING;
+CREATE POLICY dev_all_users ON public.users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY dev_all_packages ON public.packages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY dev_all_tracking ON public.tracking_updates FOR ALL USING (true) WITH CHECK (true);
 
--- Create sample packages
-INSERT INTO public.packages (
-  tracking_number,
-  sender_name,
-  sender_address,
-  receiver_name,
-  receiver_address,
-  weight_kg,
-  dimensions,
-  item_name,
-  item_description,
-  item_value,
-  status,
-  estimated_delivery
-) VALUES
-  (
-    'BB-2026-123456789',
-    'John Smith',
-    '123 Main St, New York, NY 10001',
-    'Sarah Johnson',
-    '456 Oak Ave, Los Angeles, CA 90001',
-    2.5,
-    '30x20x15 cm',
-    'Electronics',
-    'Laptop and accessories',
-    1200.00,
-    'in_transit',
-    NOW() + INTERVAL '7 days'
-  ),
-  (
-    'BB-2026-987654321',
-    'Alice Brown',
-    '789 Pine Rd, Chicago, IL 60601',
-    'Bob Wilson',
-    '321 Maple St, Houston, TX 77001',
-    5.0,
-    '50x40x30 cm',
-    'Documents',
-    'Legal contracts and certificates',
-    500.00,
-    'pending',
-    NOW() + INTERVAL '5 days'
-  ),
-  (
-    'BB-2026-555555555',
-    'Charlie Davis',
-    '654 Elm Blvd, Miami, FL 33101',
-    'Diana Miller',
-    '987 Cedar Ln, Seattle, WA 98101',
-    1.5,
-    '25x15x10 cm',
-    'Clothing',
-    'Winter jackets and sweaters',
-    350.00,
-    'delivered',
-    NOW() - INTERVAL '2 days'
-  ),
-  (
-    'BB-2026-444444444',
-    'Edward Garcia',
-    '852 Birch Dr, Phoenix, AZ 85001',
-    'Fiona Martinez',
-    '159 Spruce Way, Denver, CO 80201',
-    3.0,
-    '40x30x20 cm',
-    'Medical Supplies',
-    'First aid kits and medications',
-    800.00,
-    'cancelled',
-    NOW() + INTERVAL '3 days'
-  );
+-- ── 5. AUTO-UPDATE TRIGGER (sets updated_at on row change) ───
 
--- ============================================
--- 7. VERIFY THE SETUP
--- ============================================
--- Check users table structure
-SELECT 'Users table:' as table_name;
-SELECT 
-  column_name,
-  data_type,
-  is_nullable,
-  column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' 
-  AND table_name = 'users'
-ORDER BY ordinal_position;
-
--- Check packages table structure
-SELECT 'Packages table:' as table_name;
-SELECT 
-  column_name,
-  data_type,
-  is_nullable,
-  column_default
-FROM information_schema.columns
-WHERE table_schema = 'public' 
-  AND table_name = 'packages'
-ORDER BY ordinal_position;
-
--- Check sample users
-SELECT 'Sample users:' as section;
-SELECT id, email, name, role, created_at 
-FROM public.users 
-ORDER BY created_at DESC;
-
--- Check sample packages
-SELECT 'Sample packages:' as section;
-SELECT 
-  tracking_number,
-  sender_name,
-  receiver_name,
-  item_name,
-  item_value,
-  status,
-  estimated_delivery
-FROM public.packages
-ORDER BY created_at DESC;
-
--- ============================================
--- 8. CREATE FUNCTION TO UPDATE TIMESTAMP
--- ============================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
+  NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- ============================================
--- 9. CREATE TRIGGERS FOR AUTO-UPDATE
--- ============================================
--- For users table
-DROP TRIGGER IF EXISTS update_users_updated_at ON public.users;
-CREATE TRIGGER update_users_updated_at
-  BEFORE UPDATE ON public.users
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_users_updated_at') THEN
+    CREATE TRIGGER set_users_updated_at BEFORE UPDATE ON public.users
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'set_packages_updated_at') THEN
+    CREATE TRIGGER set_packages_updated_at BEFORE UPDATE ON public.packages
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
--- For packages table
-DROP TRIGGER IF EXISTS update_packages_updated_at ON public.packages;
-CREATE TRIGGER update_packages_updated_at
-  BEFORE UPDATE ON public.packages
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+-- ── 6. TRACKING NUMBER GENERATOR ──────────────────────────────
 
--- ============================================
--- 10. CREATE FUNCTION TO GENERATE TRACKING NUMBER
--- ============================================
 CREATE OR REPLACE FUNCTION generate_tracking_code()
 RETURNS TEXT AS $$
 DECLARE
-  year_part TEXT;
-  random_part TEXT;
+  year_part    TEXT;
+  random_part  TEXT;
   tracking_code TEXT;
-  counter INTEGER := 0;
+  counter      INTEGER := 0;
 BEGIN
-  year_part := EXTRACT(YEAR FROM NOW())::TEXT;
-  
+  year_part := EXTRACT(YEAR FROM now())::TEXT;
+
   LOOP
-    -- Generate 9 random digits
     random_part := LPAD(FLOOR(RANDOM() * 1000000000)::TEXT, 9, '0');
     tracking_code := 'BB-' || year_part || '-' || random_part;
-    
-    -- Check if it exists
+
     IF NOT EXISTS (SELECT 1 FROM public.packages WHERE tracking_number = tracking_code) THEN
       RETURN tracking_code;
     END IF;
-    
+
     counter := counter + 1;
     IF counter > 10 THEN
-      -- Fallback: add timestamp to ensure uniqueness
       random_part := LPAD(FLOOR(RANDOM() * 1000000000)::TEXT, 9, '0');
-      tracking_code := 'BB-' || year_part || '-' || random_part || '-' || EXTRACT(EPOCH FROM NOW())::TEXT;
+      tracking_code := 'BB-' || year_part || '-' || random_part || '-' || EXTRACT(EPOCH FROM now())::TEXT;
       RETURN tracking_code;
     END IF;
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
--- ============================================
--- 11. TEST THE GENERATOR FUNCTION
--- ============================================
-SELECT generate_tracking_code() AS new_tracking_code;
+-- ── 7. SEED DATA (sample users + packages) ────────────────────
 
--- ============================================
--- 12. SUMMARY
--- ============================================
-SELECT '✅ SUPABASE SETUP COMPLETE!' AS message;
-SELECT 
-  (SELECT COUNT(*) FROM public.users) AS total_users,
-  (SELECT COUNT(*) FROM public.packages) AS total_packages,
-  (SELECT COUNT(DISTINCT tracking_number) FROM public.packages) AS unique_tracking_numbers,
-  (SELECT SUM(item_value) FROM public.packages) AS total_declared_value;
+INSERT INTO public.users (email, username, name, password, role) VALUES
+  ('tebia@gmail.com', 'tebia', 'Tebia Admin', 'Password@1', 'admin'),
+  ('user@example.com', 'demo_user', 'Demo User',    'Password@123', 'user')
+ON CONFLICT (email) DO NOTHING;
+
+INSERT INTO public.packages (
+  tracking_number, service_type, priority, weight_kg, dimensions,
+  item_name, item_description, item_value,
+  sender_name, sender_address, sender_city, sender_country, sender_email, sender_phone,
+  receiver_name, receiver_address, receiver_city, receiver_country, receiver_email, receiver_phone,
+  status, current_location, estimated_delivery
+) VALUES
+  (
+    'BB-2026-157946183', 'international', 'high', 2.5, '30x20x15 cm',
+    'MacBook Pro 16"', 'Apple MacBook Pro 16-inch, M3 Max, 64GB RAM, 2TB SSD', 3499.00,
+    'Apple Inc.', 'One Apple Park Way', 'Cupertino', 'USA', 'support@apple.com', '+1-800-692-7753',
+    'John Smith', '123 Main Street', 'London', 'UK', 'john.smith@example.com', '+44-20-7123-4567',
+    'in_transit', 'London Heathrow Airport', now() + INTERVAL '5 days'
+  ),
+  (
+    'BB-2026-157946184', 'express', 'urgent', 0.5, '25x15x10 cm',
+    'Medical Supplies', 'Emergency medical equipment and supplies', 1250.00,
+    'MedSupply Inc.', '456 Medical Blvd', 'Berlin', 'Germany', 'orders@medsupply.com', '+49-30-12345678',
+    'City Hospital', '789 Health Street', 'Paris', 'France', 'receiving@cityhospital.fr', '+33-1-23456789',
+    'out_for_delivery', 'Paris Distribution Center', now() + INTERVAL '1 day'
+  ),
+  (
+    'BB-2026-123456789', 'standard', 'medium', 5.0, '50x40x30 cm',
+    'Books', 'Collection of technical books', 350.00,
+    'Alice Brown', '789 Pine Rd', 'Chicago', 'USA', 'alice@example.com', '+1-312-555-0100',
+    'Bob Wilson', '321 Maple St', 'Houston', 'USA', 'bob@example.com', '+1-713-555-0100',
+    'delivered', 'Houston Delivery Hub', now() - INTERVAL '2 days'
+  )
+ON CONFLICT (tracking_number) DO NOTHING;
+
+-- Seed tracking history for the first package
+INSERT INTO public.tracking_updates (package_id, status, location, description)
+SELECT p.id, 'pending', 'New York Sorting Center', 'Package registered in the system'
+FROM public.packages p WHERE p.tracking_number = 'BB-2026-157946183';
+
+-- ═══════════════════════════════════════════════════════════════
+-- DONE. Verify with:
+-- SELECT 'Users' tbl, COUNT(*) FROM public.users
+-- UNION ALL SELECT 'Packages', COUNT(*) FROM public.packages
+-- UNION ALL SELECT 'Tracking Updates', COUNT(*) FROM public.tracking_updates;
+-- ═══════════════════════════════════════════════════════════════
+
+-- If you already had tables from an old schema, some columns may not exist.
+-- Uncomment and run these ALTER statements to add any missing columns:
+
+-- ALTER TABLE public.users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE;
+-- ALTER TABLE public.users ADD COLUMN IF NOT EXISTS password TEXT;

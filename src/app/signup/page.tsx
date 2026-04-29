@@ -68,18 +68,23 @@ export default function SignUpPage() {
     
     try {
       // Create user in auth system
-      const newUser = createUser({
+      const createResult = await createUser({
         username: formData.username,
         email: formData.email,
         password: formData.password,
         role: formData.email === 'tebia@gmail.com' ? 'admin' : 'user'
       });
+
+      if (!createResult.success) {
+        setErrors({ submit: createResult.error || 'Registration failed' });
+        return;
+      }
       
       // Auto-login after registration
       const loginResult = await login(formData.email, formData.password);
       
       if (!loginResult.success) {
-        setErrors({ submit: 'Registration successful but login failed. Please try logging in.' });
+        setErrors({ submit: 'Account created but login failed. Please try logging in.' });
         return;
       }
       
