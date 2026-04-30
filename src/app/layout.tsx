@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { themeConfig } from '@/lib/theme';
 
 export const metadata: Metadata = {
@@ -37,13 +38,15 @@ export default function RootLayout({
         `}</style>
       </head>
       <body className="antialiased">
-        <div className="min-h-screen bg-white dark:bg-gray-900">
-          <Navigation />
-          <main className="relative pt-20">
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <KeepAliveProvider>
+          <div className="min-h-screen bg-white dark:bg-gray-900">
+            <Navigation />
+            <main className="relative pt-20">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </KeepAliveProvider>
       </body>
     </html>
   );

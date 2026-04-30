@@ -46,13 +46,13 @@ const contactInfo = [
   {
     icon: Phone,
     title: 'Phone',
-    value: '+1 (555) 123-4567',
-    href: 'tel:+15551234567',
+    value: '+447345693638',
+    href: 'tel:+447345693638',
   },
   {
     icon: MapPin,
     title: 'Headquarters',
-    value: '123 Tech Street, San Francisco, CA 94107',
+    value: 'Odda Couriers, 399 Silbury Blvd, Milton Keynes MK9,2AH, United Kingdom',
     href: 'https://maps.google.com',
   },
 ];
